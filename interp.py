@@ -1,9 +1,15 @@
 import glob
+import config
 
 class Interp(object):
     def __init__(self):
         self.cmdmodules = dict()
+        passdict = config.logins
         self.findCommands()
+        self.cmd = list()
+        for command in self.cmdmodules:
+            module = self.cmdmodules[command]
+            self.cmd += [module.__dict__[module.name](passdict[module.name]['u'], passdict[module.name]['pass'])]
 
     def importCommand(self, commandName):
         command = __import__(commandName)
@@ -32,17 +38,15 @@ class Interp(object):
                     break
         commands.append(words)
 
-        lastcmd = ''
+        lastcmd = False
         for order in commands:
             contains = False
-            for command in self.cmdmodules:
-                module = self.cmdmodules[command]  
-                cmd = module.__dict__[module.name]()
-                if cmd.hasKeyword(order[0]):
+            for command in self.cmd:
+                if command.hasKeyword(order[0]):
                     contains = True
-                    lastcmd = cmd
-                    cmd.run(order[1:])
+                    lastcmd = command
+                    command.run(order[1:])
                     break
             if not contains:
-                if lastcmd != '':
+                if lastcmd:
                     lastcmd.run(order)
