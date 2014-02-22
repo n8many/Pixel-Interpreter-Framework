@@ -29,8 +29,8 @@ class Music(Command):
 
         self.library = self.gmusic.get_all_songs()
             
-    def play(self):
-        self.currentSong = self.currentPlaylist[self.playlistIndex]
+    def play(self, cs = currentPlaylist[playlistIndex]):
+        self.currentSong = cs
         self.isPlaying = True
         print 'play' + self.currentSong['title']
 
@@ -62,12 +62,12 @@ class Music(Command):
 
     def playSong(self, songname):
         for song in self.library:
-            if song['titleNorm'] == songname:
+            if songname in song['titleNorm']:
+                self.play(cs = song)
                 self.currentPlaylist = [song]
                 tempplaylist = self.gmusic.get_playlist_songs(self.playlists['Megalist'][0])
                 random.shuffle(tempplaylist)
                 self.currentPlaylist += tempplaylist
-                self.play()
                 break
     def playAlbum(self, albumname):
         tempplaylist = list()
