@@ -1,8 +1,6 @@
 from commands.command import Command
 import beautifulhue
 
-name = 'Lights'
-
 class Lights(Command):
     def __init__(self):
         self.keywords = ['light','lights']
