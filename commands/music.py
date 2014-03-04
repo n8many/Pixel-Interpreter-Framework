@@ -4,10 +4,10 @@ from alsaaudio import PCM
 import random
 
 class Music(Command):
-    def __init__(self, user, passw):
+    def __init__(self, credentials):
         self.keywords = ['music']
         self.gmusic = Webclient()
-        self.gmusic.login(user, passw)
+        self.gmusic.login(credentials['u'], credentials['pass'])
         self.currentPlaylist = list()
         self.currentSong = dict()
         self.isPlaying = False
