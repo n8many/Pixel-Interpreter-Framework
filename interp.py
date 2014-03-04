@@ -1,33 +1,16 @@
-import glob
+from commands import *
 import config
+
 
 class Interp(object):
     def __init__(self):
-        self.cmdmodules = dict()
-        passdict = config.logins
-        self.findCommands()
-        self.cmd = list()
-        for command in self.cmdmodules:
-            module = self.cmdmodules[command]
-            self.cmd += [module.__dict__[module.name](passdict[module.name]['u'], passdict[module.name]['pass'])]
-
-    def importCommand(self, commandName):
-        command = __import__(commandName)
-        for c in commandName.split(".")[1:]:
-            command = getattr(command, c)
-        return command
-
-    def findCommands(self):
-        cmdfiles = glob.glob("commands/*py")
-        for module in cmdfiles:
-            module = module.split("/")[-1].split(".")[0]
-            self.cmdmodules[module] = self.importCommand("commands." +
-                   module)
-        self.cmdmodules.__delitem__('command')
-        self.cmdmodules.__delitem__('__init__')
+        logins = config.logins
+        # FIXME: The c.__module... duplication is bad, find a way to
+        # clean it up.
+        self.commands = [c(logins[c.__module__.split('.')[-1]]['u'],
+            logins[c.__module__.split('.')[-1]]['pass']) if c.needsPassword() else c() for c in command.Command.__subclasses__()]
 
     def interpret(self, cmdstring):
-
         words = cmdstring.split()
         commands = list()
         for w in words:
@@ -41,7 +24,7 @@ class Interp(object):
         lastcmd = False
         for order in commands:
             contains = False
-            for command in self.cmd:
+            for command in self.commands:
                 if command.hasKeyword(order[0]):
                     contains = True
                     lastcmd = command

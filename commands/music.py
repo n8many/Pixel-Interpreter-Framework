@@ -1,10 +1,7 @@
 from commands.command import Command
 from gmusicapi import Webclient
-from operator import itemgetter
-import alsaaudio
+from alsaaudio import PCM
 import random
-
-name = 'Music'
 
 class Music(Command):
     def __init__(self, user, passw):
@@ -16,7 +13,7 @@ class Music(Command):
         self.isPlaying = False
         self.playlistIndex = 0
         self.updateSongs()
-    
+        self.player = PCM()
 
     def updateSongs(self):
         self.playlists = self.gmusic.get_all_playlist_ids()["user"]
@@ -29,9 +26,12 @@ class Music(Command):
 
         self.library = self.gmusic.get_all_songs()
             
-    def play(self):
-        self.currentSong = self.currentPlaylist[self.playlistIndex]
+    def play(self, cs = None):
+        if cs == None:
+            cs = self.currentPlaylist[self.playlistIndex]
+        self.currentSong = cs
         self.isPlaying = True
+#       self.player.write(self.gmusic.get_stream_audio(self.currentSong[u'id']))
         print 'play' + self.currentSong['title']
 
     def pause(self):
@@ -62,12 +62,12 @@ class Music(Command):
 
     def playSong(self, songname):
         for song in self.library:
-            if song['titleNorm'] == songname:
+            if songname in song['titleNorm']:
+                self.play(cs = song)
                 self.currentPlaylist = [song]
-                tempplaylist = self.gmusic.get_playlist_songs(self.playlists['Megalist'][0])
-                random.shuffle(tempplaylist)
-                self.currentPlaylist += tempplaylist
-                self.play()
+#               tempplaylist = self.gmusic.get_playlist_songs(self.playlists['Megalist'][0])
+#               random.shuffle(tempplaylist)
+#               self.currentPlaylist += tempplaylist
                 break
     def playAlbum(self, albumname):
         tempplaylist = list()

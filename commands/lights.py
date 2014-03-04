@@ -4,7 +4,7 @@ import beautifulhue
 name = 'Lights'
 
 class Lights(Command):
-    def __init__(self, user, passw):
+    def __init__(self):
         self.keywords = ['light','lights']
 
     def run(self, commandlist):
