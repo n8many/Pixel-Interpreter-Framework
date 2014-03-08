@@ -5,12 +5,12 @@ import subprocess
 import random
 
 class Music(Command):
-    def __init__(self, user, passw):
+    def __init__(self, credentials):
         self.keywords = ['music']
         self.gmusic = Webclient()
-        self.gmusic.login(user, passw)
         self.queue = list()
         self.cSong = dict()
+        self.gmusic.login(credentials['u'], credentials['pass'])
         self.isPlaying = False
         self.qIndex = 0
         self.updateSongs()

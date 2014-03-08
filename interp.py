@@ -7,8 +7,10 @@ class Interp(object):
         logins = config.logins
         # FIXME: The c.__module... duplication is bad, find a way to
         # clean it up.
-        self.commands = [c(logins[c.__module__.split('.')[-1]]['u'],
-            logins[c.__module__.split('.')[-1]]['pass']) if c.needsPassword() else c() for c in command.Command.__subclasses__()]
+        self.commands = [
+                c(logins[c.__module__.split('.')[-1]]) if c.needsPassword() else c()
+                    for c in command.Command.__subclasses__()
+        ]
 
     def interpret(self, cmdstring):
         words = cmdstring.split()
