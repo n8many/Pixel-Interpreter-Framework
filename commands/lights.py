@@ -1,9 +1,12 @@
 from commands.command import Command
-import beautifulhue
+from beautifulhue.api import Bridge
 
 class Lights(Command):
     def __init__(self, credentials):
         self.keywords = ['light','lights']
+        self.bridge = Bridge(device={'ip':credentials['ip']},
+                user={'name':credentials['u']})
+        self.groups = credentials['groups']
 
     def run(self, commandlist):
         if len(commandlist) == 0:
