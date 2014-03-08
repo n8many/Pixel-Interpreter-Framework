@@ -135,4 +135,3 @@ def playAlbum(self, albumname):
 
         else:
             print "m err"
-
