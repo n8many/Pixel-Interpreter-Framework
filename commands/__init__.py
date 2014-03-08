@@ -1,1 +1,1 @@
-__all__ = ["command", "lights", "music"]
+__all__ = ["command", "lights", "gmusic"]

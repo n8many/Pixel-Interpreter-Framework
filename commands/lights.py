@@ -2,7 +2,7 @@ from commands.command import Command
 import beautifulhue
 
 class Lights(Command):
-    def __init__(self, user, passw):
+    def __init__(self, credentials):
         self.keywords = ['light','lights']
 
     def run(self, commandlist):
