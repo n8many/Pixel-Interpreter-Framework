@@ -1,5 +1,6 @@
 *.py[cod]
 config.py
+musictester.py
 
 # C extensions
 *.so
