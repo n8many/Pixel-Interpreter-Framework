@@ -12,18 +12,19 @@ class Music(Command):
         self.gmusic.login(credentials['u'], credentials['pass'])
         self.isPlaying = False
         self.qIndex = 0
+        self.defaultPlaylist = credentials['playlist']
         self.updateSongs()
         self.devid = credentials['id']
-        self.defaultPlaylist = credentials['playlist']
 
 
     def stripQueue(self, queue):
         queue2 = list()
-        for song in queue
+        for song in queue:
             queue2 += [song['id']]
         return queue2
 
     def getInfo(self, songid):
+        song = dict()
         for s in self.library:
             if s['id'] == songid:
                 song = s
@@ -32,7 +33,7 @@ class Music(Command):
 
     def updateSongs(self):
         self.library = self.gmusic.get_all_songs()
-        self.playlists = self.gmusic.get_all_playlist_contents()
+        self.playlists = self.gmusic.get_all_user_playlist_contents()
         if len(self.queue) == 0:
             for playlist in self.playlists:
                 if playlist['name'] == self.defaultPlaylist:
@@ -45,7 +46,7 @@ class Music(Command):
 
     def play(self, csid = None):
         if csid == None:
-            csid = self.queue[self.qIndex]['id']
+            csid = self.queue[self.qIndex]
         self.isPlaying = True
 #       self.player.write(self.gmusic.get_stream_audio(csid,self.devid)
         self.cSong = self.getInfo(csid)
@@ -71,15 +72,15 @@ class Music(Command):
 
     def rickRoll(self):
         for song in self.library:
-            if song['titleNorm'] == 'never gonna give you up':
+            if song['title'] == 'never gonna give you up':
                 self.queue = [song['id']]
                 self.qIndex = 0
                 self.play()
 
     def playSong(self, songname):
         for song in self.library:
-            if songname in song['titleNorm']:
-                self.queue = [song['id']
+            if songname in song['title']:
+                self.queue = [song['id']]
                 self.qIndex = 0
                 self.play()
 #               tempplaylist = self.gmusic.get_playlist_songs(self.playlists['Megalist'][0])
@@ -90,7 +91,7 @@ class Music(Command):
     def playAlbum(self, albumname):
         tempplaylist = list()
         for song in self.library:
-            if albumname in song["albumNorm"] or albumname in song["album"]:
+            if albumname in song["album"]:
                 tempplaylist += [song]
         if len(tempplaylist) > 0:
             tempplaylist = sorted(tempplaylist, key=lambda k: k['track'])
@@ -100,7 +101,7 @@ class Music(Command):
     def playArtist(self, artistname):
         tempplaylist = list()
         for song in self.library:
-            if artistname in song["artistNorm"] or artistname in song["artist"]:
+            if artistname in song["artist"]:
                 tempplaylist += [song]    
         if len(templaylist) > 0:
             self.queue = stripQueue(tempplaylist)
