@@ -7,25 +7,79 @@ class Lights(Command):
         self.bridge = Bridge(device={'ip':credentials['ip']},
                 user={'name':credentials['u']})
         self.groups = credentials['groups']
+        self.currentGroup = groups[0]
+
+
+    def sendCommand(self, group, setting):
+        for light in group:
+            resource = {'which':light,'data':{setting}}
+            bridge.light.update(resource)
+
+    def isNumber(self, word)
+        try:
+            int(word)
+            return True
+        except:
+            return False
 
     def run(self, commandlist):
-        if len(commandlist) == 0:
-            print "light toggle"
-        elif commandlist[0] == "on":
-            print "lights on"
-        elif commandlist[0] == "off":
-            print "lights off"
-        elif commandlist[0] == "set":
-            print "set tree"
-        elif commandlist[0] == "color":
-            print "color control"
-        elif commandlist[0] == "dim":
-            print "brightness dim"
-        elif commandlist[0] == "bright":
-            print "brightness high"
-        elif commandlist[0] == "brightness":
-            print "brightness level"
-        elif commandlist[0] == "":
-            print "empty command"
-        else:
-            print "err"    
+        self.getStatus()
+        data = {"on":True}
+        group = self.currentGroup
+        for i from 0 to len(commandlist)-1:
+            if len(commandlist) == 0:
+                print "light toggle"
+                break
+            
+            if commandlist[i] == light && self.isNumber(commandlist[i+1]):
+                group = [int(commandlist[i+1])]
+
+            elif commandlist[i] in self.groups:
+                self.currentGroup = self.groups[commandlist[i]]
+            
+            elif commandlist[i] in self.colors:
+                pass
+            
+            elif self.isNumber(commandlist[i]):
+                pass
+
+            elif commandlist[i] == "on":
+                data['on'] = True
+                print "lights on"
+                
+            elif commandlist[i] == "off":
+                data['on'] = False
+                print "lights off"
+                
+            elif commandlist[i] == "set":
+                print "set tree"
+                
+            elif commandlist[i] == "color":
+                if commandlist[i+1] in self.colors:
+                    data = dict(data.items()+self.colors[i+1].items())
+                    print "set color" + commandlist[i+1]
+                    
+            elif commandlist[0] == "dim":
+                data['bri'] = 50
+                print "brightness dim"
+
+            elif commandlist[i] == "bright":
+                data['bri'] = 255
+                print "brightness high"
+
+            elif commandlist[i] == "brightness" && self.isNumber(commandlist[i+1]):
+                data['bri'] = int(commandlist[1])*25 + 5            
+                print "brightness level"
+
+            elif commandlist[i] == 'soft':
+                data['sat'] = 100
+                print "lighten color"
+
+            elif commandlist[i] == 'deep':
+                data['sat'] = 255
+                print "deepen color"
+
+            else:
+                pass
+
+            self.sendCommand(group,data)
