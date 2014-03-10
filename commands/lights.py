@@ -4,10 +4,10 @@ from beautifulhue.api import Bridge
 class Lights(Command):
     def __init__(self, credentials):
         self.keywords = ['light','lights']
-        self.bridge = Bridge(device={'ip':credentials['ip']},
-                user={'name':credentials['u']})
+#       self.bridge = Bridge(device={'ip':credentials['ip']},
+#                user={'name':credentials['u']})
         self.groups = credentials['groups']
-        self.currentGroup = groups[0]
+        self.currentGroup = self.groups['all']
 
 
     def sendCommand(self, group, setting):
@@ -15,7 +15,7 @@ class Lights(Command):
             resource = {'which':light,'data':{setting}}
             bridge.light.update(resource)
 
-    def isNumber(self, word)
+    def isNumber(self, word):
         try:
             int(word)
             return True
@@ -23,15 +23,15 @@ class Lights(Command):
             return False
 
     def run(self, commandlist):
-        self.getStatus()
+#        self.getStatus()
         data = {"on":True}
         group = self.currentGroup
-        for i from 0 to len(commandlist)-1:
+        for i in xrange(0, len(commandlist)-1):
             if len(commandlist) == 0:
                 print "light toggle"
                 break
             
-            if commandlist[i] == light && self.isNumber(commandlist[i+1]):
+            if commandlist[i] == 'light' and self.isNumber(commandlist[i+1]):
                 group = [int(commandlist[i+1])]
 
             elif commandlist[i] in self.groups:
@@ -67,7 +67,7 @@ class Lights(Command):
                 data['bri'] = 255
                 print "brightness high"
 
-            elif commandlist[i] == "brightness" && self.isNumber(commandlist[i+1]):
+            elif commandlist[i] == "brightness" and self.isNumber(commandlist[i+1]):
                 data['bri'] = int(commandlist[1])*25 + 5            
                 print "brightness level"
 
@@ -82,4 +82,4 @@ class Lights(Command):
             else:
                 pass
 
-            self.sendCommand(group,data)
+#            self.sendCommand(group,data)

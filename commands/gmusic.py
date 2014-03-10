@@ -2,8 +2,9 @@ from commands.command import Command
 from gmusicapi import Mobileclient
 import subprocess
 import random
+import os
 
-class Music(Command):
+class Gmusic(Command):
     def __init__(self, credentials):
         self.keywords = ['music']
         self.gmusic = Mobileclient()
@@ -16,11 +17,13 @@ class Music(Command):
         self.updateSongs()
         self.devid = credentials['id']
 
-
     def stripQueue(self, queue):
         queue2 = list()
         for song in queue:
-            queue2 += [song['id']]
+            try:
+                queue2 += [song['trackId']]
+            except:
+                queue2 += [song['id']]
         return queue2
 
     def getInfo(self, songid):
@@ -39,6 +42,7 @@ class Music(Command):
                 if playlist['name'] == self.defaultPlaylist:
                     tempq = playlist['tracks']
                     self.queue = self.stripQueue(tempq)
+            self.qIndex = 0
             random.shuffle(self.queue)
 
         if not self.cSong:
@@ -48,10 +52,13 @@ class Music(Command):
         if csid == None:
             csid = self.queue[self.qIndex]
         self.isPlaying = True
-#       self.player.write(self.gmusic.get_stream_audio(csid,self.devid)
+        url = self.gmusic.get_stream_url(csid,self.devid)
+        with open(os.devnull, 'w') as temp:
+            self.player = subprocess.Popen(['mplayer','-cache', '8192',  '-ao', 'alsa', '-vo',
+                'null', '%s' % url], stdin=subprocess.PIPE, stdout=temp)
         self.cSong = self.getInfo(csid)
         print 'play' + self.cSong['title']
-
+    
     def pause(self):
         self.isPlaying = False
         print 'pausing'
@@ -72,12 +79,12 @@ class Music(Command):
 
     def rickRoll(self):
         for song in self.library:
-            if song['title'] == 'never gonna give you up':
+            if song['title'] == 'Never Gonna Give You Up':
                 self.queue = [song['id']]
                 self.qIndex = 0
                 self.play()
 
-    def playSong(self, songname):
+    def findSong(self, songname):
         for song in self.library:
             if songname in song['title']:
                 self.queue = [song['id']]
@@ -88,20 +95,20 @@ class Music(Command):
 #               self.queue += tempplaylist
                 break
     
-    def playAlbum(self, albumname):
+    def findAlbum(self, albumname):
         tempplaylist = list()
         for song in self.library:
-            if albumname in song["album"]:
+            if albumname in song['album']:
                 tempplaylist += [song]
         if len(tempplaylist) > 0:
             tempplaylist = sorted(tempplaylist, key=lambda k: k['track'])
             self.queue = self.stripQueue(tempplaylist)
             self.play()
 
-    def playArtist(self, artistname):
+    def findArtist(self, artistname):
         tempplaylist = list()
         for song in self.library:
-            if artistname in song["artist"]:
+            if artistname in song['artist']:
                 tempplaylist += [song]    
         if len(templaylist) > 0:
             self.queue = stripQueue(tempplaylist)
@@ -109,7 +116,7 @@ class Music(Command):
             self.qIndex = 0
             self.play()
 
-    def playPlaylist(self, playlistname):
+    def findPlaylist(self, playlistname):
         for playlist in self.playlists:
             if playlist['name'] == playlistname:
                 tempq = playlist['tracks']
@@ -133,16 +140,16 @@ class Music(Command):
                     print "play music"
 
             elif commandlist [1] == "playlist":
-                self.playPlaylist(" ".join(commandlist[2:]))
+                self.findPlaylist(" ".join(commandlist[2:]))
 
             elif commandlist [1] == "song":
-                self.playSong(" ".join(commandlist[2:]))
+                self.findSong(" ".join(commandlist[2:]))
 
             elif commandlist [1] == "artist":
-                self.playArtist(" ".join(commandlist[2:]))
+                self.findArtist(" ".join(commandlist[2:]))
 
             elif commandlist[1] == "album":
-                self.playAlbum(" ".join(commandlist[2:]))
+                self.findAlbum(" ".join(commandlist[2:]))
             
             
         elif commandlist[0] == "pause":
