@@ -26,7 +26,7 @@ class Lights(Command):
 #        self.getStatus()
         data = {"on":True}
         group = self.currentGroup
-        for i in xrange(0, len(commandlist)-1):
+        for i in xrange(0, len(commandlist)):
             if len(commandlist) == 0:
                 print "light toggle"
                 break
