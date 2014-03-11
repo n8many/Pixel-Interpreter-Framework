@@ -26,12 +26,15 @@ class Interp(object):
         lastcmd = False
         for order in commands:
             contains = False
-            for command in self.commands:
-                if command.hasKeyword(order[0]):
-                    contains = True
-                    lastcmd = command
-                    command.run(order[1:])
+            for word in order:
+                if contains == True:
                     break
+                for command in self.commands:
+                    if command.hasKeyword(word):
+                        contains = True
+                        lastcmd = command
+                        command.run(order)
+                        break
             if not contains:
                 if lastcmd:
                     lastcmd.run(order)
