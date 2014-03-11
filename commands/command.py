@@ -18,3 +18,6 @@ class Command(object):
             return False
         else:
             return True
+
+    def run(self,commandlist):
+        pass
