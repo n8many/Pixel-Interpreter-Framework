@@ -4,8 +4,8 @@ from beautifulhue.api import Bridge
 class Lights(Command):
     def __init__(self, credentials):
         self.keywords = ['light','lights']
-#       self.bridge = Bridge(device={'ip':credentials['ip']},
-#                user={'name':credentials['u']})
+        self.bridge = Bridge(device={'ip':credentials['ip']},
+                user={'name':credentials['u']})
         self.groups = credentials['groups']
         self.currentGroup = self.groups['all']
 
@@ -82,4 +82,4 @@ class Lights(Command):
             else:
                 pass
 
-#            self.sendCommand(group,data)
+             self.sendCommand(group,data)
