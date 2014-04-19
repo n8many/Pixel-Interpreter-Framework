@@ -4,6 +4,7 @@ from alsaaudio import Mixer
 
 class Volume(Command):
     def __init__(self):
+        print 'Loading volume module'
         self.keywords = ['volume','turn','sound']
 
     def isNumber(self, word):

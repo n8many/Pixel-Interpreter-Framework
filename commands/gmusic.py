@@ -1,22 +1,29 @@
 from commands.command import Command
 from gmusicapi import Mobileclient
+from fuzzywuzzy import fuzz, process
+from player import Player
+import threading
+import time
 import subprocess
 import random
 import os
 
 class Gmusic(Command):
     def __init__(self, credentials):
+        print 'Loading music module'
         self.keywords = ['music','playlist','song','artist','album']
         self.gmusic = Mobileclient()
         self.queue = list()
-        self.cSong = dict()
+        self.currentsong = dict()
+        print 'Logging in to music client'
         self.gmusic.login(credentials['u'], credentials['pass'])
         self.isPlaying = False
-        self.qIndex = 0
+        self.queueindex = 0
         self.defaultPlaylist = credentials['playlist']
         self.updateSongs()
-        self.devid = credentials['id']
-        self.player = None 
+        self.deviceid = credentials['id']
+        self.player = None
+        self.minimumaccuracy = 75
 
     def stripQueue(self, queue):
         queue2 = list()
@@ -36,49 +43,68 @@ class Gmusic(Command):
         return song
 
     def updateSongs(self):
+        print 'Loading songs'
         self.library = self.gmusic.get_all_songs()
+        print 'Loading playlists'
         self.playlists = self.gmusic.get_all_user_playlist_contents()
-        if len(self.queue) == 0:
-            for playlist in self.playlists:
-                if playlist['name'] == self.defaultPlaylist:
-                    tempq = playlist['tracks']
-                    self.queue = self.stripQueue(tempq)
-            self.qIndex = 0
+        
+        print 'Getting song info'
+        self.artists = []
+        self.albums = []
+        self.songTitles = []
+        self.playlistNames = []
+        for song in self.library:
+            self.songTitles += [song['title']]
+            if song['album'] not in self.albums:
+                self.albums += [song['album']]
+            if song['artist'] not in self.artists:
+                self.artists += [song['artist']]
+
+        print 'Getting playlist info'
+        for playlist in self.playlists:
+            self.playlistNames += [playlist['name']]
+        if not self.queue:
+            self.queueindex = 0
+            self.queue = self.findPlaylist(self.defaultPlaylist)
+            print len(self.queue)
             random.shuffle(self.queue)
 
-        if not self.cSong:
-            self.cSong = self.getInfo(self.queue[self.qIndex])
+        if not self.currentsong:
+            self.currentsong = self.getInfo(self.queue[self.queueindex])
 
     def play(self, csid = None):
         if csid == None:
-            csid = self.queue[self.qIndex]
+            csid = self.queue[self.queueindex]
         self.isPlaying = True
-        url = self.gmusic.get_stream_url(csid,self.devid)
-        with open(os.devnull, 'w') as temp:
-            self.player = subprocess.Popen(['mplayer','-cache', '8192',  '-ao', 'alsa', '-vo',
-                'null', '%s' % url], stdin=subprocess.PIPE, stdout=temp, stderr=temp)
-        self.cSong = self.getInfo(csid)
-        print 'play' + self.cSong['title']
-    
+        url = self.gmusic.get_stream_url(csid,self.deviceid)
+        self.currentsong = self.getInfo(csid)
+        albumurl = self.currentsong['albumArtRef'][0]['url']
+        self.player = Player(url, albumurl, 'Google Music')
+        self.player.start()
+        print 'play' + self.currentsong['title']
+        self.nextSong()
+
     def pause(self):
         self.isPlaying = False
-        if isinstance(self.player, subprocess.Popen):
+        try:
             self.player.terminate()
+        except:
+            pass
         print 'pausing'
 
     def nextSong(self):
         self.pause()
-        self.qIndex += 1
-        if self.qIndex >= len(self.queue):
-            self.qIndex = 0
+        self.queueindex += 1
+        if self.queueindex >= len(self.queue):
+            self.queueindex = 0
         else:
             self.play()
 
     def previousSong(self):
         self.pause()
-        self.qIndex -= 1
-        if self.qIndex < 0:
-            self.qIndex = 0
+        self.queueindex -= 1
+        if self.queueindex < 0:
+            self.queueindex = 0
         self.play()
 
     def rickRoll(self):
@@ -87,16 +113,22 @@ class Gmusic(Command):
 
     def findSong(self, songname):
         q = list()
+        songtitle, acc = process.extractOne(songname, self.songTitles)
+        if acc < self.minimumaccuracy:
+            print 'Warning, low accuracy match'
         for song in self.library:
-            if songname in song['title']:
+            if songtitle == song['title']:
                 q = [song['id']]
                 break
         return q
     
     def findAlbum(self, albumname):
         q = list()
+        album, acc = process.extractOne(albumname, self.albums) 
+        if acc < self.minimumaccuracy:
+            print 'Warning, low accuracy match'
         for song in self.library:
-            if albumname in song['album']:
+            if album == song['album']:
                 q += [song]
         if len(q) > 0:
             q = sorted(q , key=lambda k: k['track'])
@@ -105,20 +137,28 @@ class Gmusic(Command):
 
     def findArtist(self, artistname):
         q = list()
+        artist, acc = process.extractOne(artistname, self.artists)
+        if acc < self.minimumaccuracy:
+            print 'Warning, low accuracy match'
         for song in self.library:
-            if artistname in song['artist']:
-                q += [song]    
+            if artist == song['artist']:
+                q += [song]  
         if len(q) > 0:
             q = stripQueue(q)
             random.shuffle(q)
+
         return q
 
     def findPlaylist(self, playlistname):
         q = list()
+        (name, acc) = process.extractOne(playlistname, self.playlistNames)
+        if acc < self.minimumaccuracy:
+            print 'Warning, low accuracy match'
         for playlist in self.playlists:
-            if playlist['name'] == playlistname:
+            if name == playlist['name']: 
                 q = playlist['tracks']
                 q = self.stripQueue(q)
+                break
         random.shuffle(q)
         return q
 
@@ -172,8 +212,8 @@ class Gmusic(Command):
         elif command['action'] == 'previous':
             self.previousSong()
         elif command['action'] == 'play' or command['shuffle']:
-            a = self.queue[:self.qIndex+1]
-            b = self.queue[self.qIndex+1:]
+            a = self.queue[:self.queueindex+1]
+            b = self.queue[self.queueindex+1:]
             if command['method'] == 'add':
                 q = b + command['what']
             elif command['method'] == 'next':
@@ -181,12 +221,12 @@ class Gmusic(Command):
             elif command['method'] == 'replace':
                 if self.isPlaying:
                     self.pause()
-                a = list()
-                if len(command['what'])>0:
+                a = []
+                if len(command['what']) > 0:
                     q = command['what']
                 else:
                     q = self.queue
-                self.qIndex = 0
+                self.queueindex = 0
             if command['shuffle']:
                 random.shuffle(q)
             self.queue = a + q
