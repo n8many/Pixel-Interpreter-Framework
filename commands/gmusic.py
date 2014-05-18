@@ -1,8 +1,8 @@
 from commands.command import Command
 from gmusicapi import Mobileclient
 from fuzzywuzzy import fuzz, process
-from player import Player
-import threading
+import thread
+import gst
 import time
 import subprocess
 import random
@@ -15,6 +15,7 @@ class Gmusic(Command):
         self.gmusic = Mobileclient()
         self.queue = list()
         self.currentsong = dict()
+        self.minimumaccuracy = 75
         print 'Logging in to music client'
         self.gmusic.login(credentials['u'], credentials['pass'])
         self.isPlaying = False
@@ -23,7 +24,19 @@ class Gmusic(Command):
         self.updateSongs()
         self.deviceid = credentials['id']
         self.player = None
-        self.minimumaccuracy = 75
+        thread.start_new_thread(self.makePlayer, ())
+
+
+    def moduleData(self):
+        info = dict()
+        info['Playing'] = self.isPlaying
+        info['index'] = self.queueindex
+        info['queuelength'] = len(self.queue)
+        info['currentsong'] = self.currentsong
+        info['artists'] = self.artists
+        info['albums'] = self.albums
+        info['playlists'] = self.playlistNames
+        return info
 
     def stripQueue(self, queue):
         queue2 = list()
@@ -71,29 +84,48 @@ class Gmusic(Command):
 
         if not self.currentsong:
             self.currentsong = self.getInfo(self.queue[self.queueindex])
+    def makePlayer(self):
+        if self.player == None:
+            self.player = gst.element_factory_make('playbin2', 'player')
+            self.player.set_state(gst.STATE_NULL)
+            self.player.connect('about-to-finish', self.watchEnd)
+
+    def watchEnd(self):
+        self.nextSong()
 
     def play(self, csid = None):
         if csid == None:
             csid = self.queue[self.queueindex]
+        if self.isPlaying:
+            self.stop
         self.isPlaying = True
         url = self.gmusic.get_stream_url(csid,self.deviceid)
         self.currentsong = self.getInfo(csid)
         albumurl = self.currentsong['albumArtRef'][0]['url']
-        self.player = Player(url, albumurl, 'Google Music')
-        self.player.start()
-        print 'play' + self.currentsong['title']
-        self.nextSong()
+        try:
+            self.player.set_property('uri', url)
+            self.player.set_state(gst.STATE_PLAYING)
+            print 'playing ' + self.currentsong['title']
+        except AttributeError:
+            print 'Player error!'
+
+    def stop(self):
+        if self.isPlaying:
+            try: 
+                self.player.set_state(gst.STATE_NULL)
+                self.isPlaying = False
+            except AttributeError:
+                print 'Player error!'
+
 
     def pause(self):
+        if self.isPlaying:
+            self.player.set_state(gst.STATE_PAUSED)
         self.isPlaying = False
-        try:
-            self.player.terminate()
-        except:
-            pass
         print 'pausing'
 
     def nextSong(self):
-        self.pause()
+        self.stop()
         self.queueindex += 1
         if self.queueindex >= len(self.queue):
             self.queueindex = 0
@@ -101,7 +133,7 @@ class Gmusic(Command):
             self.play()
 
     def previousSong(self):
-        self.pause()
+        self.stop()
         self.queueindex -= 1
         if self.queueindex < 0:
             self.queueindex = 0
@@ -232,4 +264,3 @@ class Gmusic(Command):
             self.queue = a + q
             if not self.isPlaying:
                 self.play()
-
