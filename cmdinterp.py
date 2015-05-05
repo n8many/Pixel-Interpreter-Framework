@@ -1,10 +1,10 @@
 from interp import Interp
 
-a = Interp()
+endcommands = ['end','exit','quit','stop']
 while True:
     s = raw_input('---> ')
-    if s != 'end':
-        a.interpret(s)
+    if s not in endcommands:
+        Interp(s)
     else:
         break
-    
+

@@ -3,18 +3,16 @@ import config
 
 
 class Interp(object):
-    def __init__(self):
-        print 'Getting credentials'
+    def __init__(self, cmd):
         logins = config.logins
         # FIXME: The c.__module... duplication is bad, find a way to
         # clean it up.
-        print 'Loading modules'
         self.commands = [
                 c(logins[c.__module__.split('.')[-1]]) if c.needsPassword() else c()
                     for c in command.Command.__subclasses__()
         ]
 
-        print 'Ready'
+        self.interpret(cmd)
 
     def interpret(self, cmdstring):
         words = cmdstring.split()
