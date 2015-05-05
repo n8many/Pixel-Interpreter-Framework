@@ -8,10 +8,15 @@ class Lights(Command):
         self.bridge = Bridge(device={'ip':credentials['ip']},
                 user={'name':credentials['u']})
         self.groups = credentials['groups']
-        self.currentGroup = self.groups['all']
-        self.colors = {'warm':{'ct':300}}
+        self.defaults = credentials['default']
+        self.currentGroup = self.groups[self.defaults['group']] 
+        self.colors = credentials['color']
+        self.isOn = False
+        self.status = dict()
+        self.getStatus()
 
     def sendCommand(self, group, setting):
+        print setting
         for light in group:
             resource = {'which':light,'data':{'state':setting}}
             self.bridge.light.update(resource)
@@ -23,12 +28,27 @@ class Lights(Command):
         except:
             return False
 
+    def getStatus(self):
+        self.isOn = False
+        for light in self.currentGroup:
+            resource = {'which':light}
+            self.status[light] = self.bridge.light.get({'which':light})['resource']
+            if self.status[light]['state']['on']:
+                self.isOn = True
+
     def run(self, commandlist):
-#       self.getStatus()
+        self.getStatus()
         data = {"on":True}
         group = self.currentGroup
+        if len(commandlist) == 0:
+            data['on'] = ~self.isOn
+            if data['on'] == False:
+                group = self.groups['all']
+            print "light toggle"
+
         for i in xrange(0, len(commandlist)):
-            if len(commandlist) == 0:
+            if len(commandlist) == 1:
+                data['on'] = not self.isOn
                 print "light toggle"
                 break
             
@@ -37,6 +57,7 @@ class Lights(Command):
 
             elif commandlist[i] in self.groups:
                 self.currentGroup = self.groups[commandlist[i]]
+                print 'group ' + commandlist[i]
             
             elif commandlist[i] in self.colors:
                 pass
@@ -60,7 +81,7 @@ class Lights(Command):
                     data = dict(data.items()+self.colors[commandlist[i+1]].items())
                     print "set color" + commandlist[i+1]
                     
-            elif commandlist[0] == "dim":
+            elif commandlist[i] == "dim":
                 data['bri'] = 50
                 print "brightness dim"
 
