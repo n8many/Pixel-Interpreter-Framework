@@ -18,6 +18,12 @@ class Command(object):
             return False
         else:
             return True
+    def isNumber(self, word):
+        try:
+            int(word)
+            return True
+        except:
+            return False
 
     def run(self,commandlist):
         pass

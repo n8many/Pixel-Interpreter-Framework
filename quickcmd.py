@@ -3,6 +3,7 @@ import sys,getopt
 def main(argv):
     try:
         opts, args = getopt.getopt(argv,'c:')
+        print args
     except getopt.GetoptError:
         sys.exit(2)
     for opt, arg in opts:

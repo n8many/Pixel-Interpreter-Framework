@@ -4,7 +4,7 @@ from beautifulhue.api import Bridge
 class Lights(Command):
     def __init__(self, credentials):
         print 'Loading lights module'
-        self.keywords = ['light','lights']
+        self.keywords = ['light', 'lights']
         self.bridge = Bridge(device={'ip':credentials['ip']},
                 user={'name':credentials['u']})
         self.groups = credentials['groups']
@@ -20,13 +20,6 @@ class Lights(Command):
         for light in group:
             resource = {'which':light,'data':{'state':setting}}
             self.bridge.light.update(resource)
-
-    def isNumber(self, word):
-        try:
-            int(word)
-            return True
-        except:
-            return False
 
     def getStatus(self):
         self.isOn = False
