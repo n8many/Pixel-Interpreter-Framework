@@ -14,7 +14,7 @@ class Screen(Command):
         self.getStatus()
         
     def getStatus(self):
-        self.isOn = RPi.GPIO.input(self.pin)
+        self.isOn = not RPi.GPIO.input(self.pin)
 
     def run(self, commandlist):
         self.getStatus()
@@ -29,7 +29,7 @@ class Screen(Command):
                 break
             
             if commandlist[i] == "on":
-                self.isOn = True
+                self.isOn = True 
                 print 'screen on'
                 
             elif commandlist[i] == "off":
@@ -38,6 +38,4 @@ class Screen(Command):
                 
             else:
                 pass
-        RPi.GPIO.setwarnings(False)
-        RPi.GPIO.output(self.pin, self.isOn)
-        RPi.GPIO.setwarnings(True)
+        RPi.GPIO.output(self.pin, not self.isOn)
