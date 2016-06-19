@@ -10,7 +10,10 @@ class Music(Command):
     def __init__(self, credentials):
         print 'Loading music module'
         self.keywords = ['music','playlist','song','artist','album']
+        self.ip = credentials['ip']
+        self.port = credentials['port']
         self.client = mpd.MPDClient()
+        self.connected = True
         self.restart()
         self.minimumaccuracy = 75
         self.defaultPlaylist = credentials['playlist']
@@ -18,11 +21,12 @@ class Music(Command):
     def restart(self):
         self.client = mpd.MPDClient()
         try:
-            self.client.connect('127.0.0.1','6600')
+            self.client.connect(self.ip, self.port)
+            self.connected = True
+            self.updateSongs()
         except:
-            print "Reconnecting..."
-            self.restart()
-        self.updateSongs()
+            print "Could not connect"
+            self.connected = False
 
     def moduleData(self):
         info = dict()
@@ -35,7 +39,7 @@ class Music(Command):
         info['playlists'] = self.playlistNames
         return info
 
-    def getInfo(self, songid):
+    def getInfo(self, songid): 
         pass
 
     def updateSongs(self):
