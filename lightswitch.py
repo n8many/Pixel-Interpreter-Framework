@@ -1,24 +1,31 @@
+import time
 import serial
 from interp import Interp
 
 ser = serial.Serial("/dev/ttyAMA0", 115200)
 
-while True:
+print "Reading from Teensy"
+
+while True: 
     out = ''
-    while ser.inWaiting()>0:
-        out += ser.read(1)
-    if out != '':
-        if out == "ON\r\n":
+    try:
+        n = ser.inWaiting()
+        if n > 0:
+            out = ser.read()
+    except:
+        print "Could not read"
+    if out != '' and out != '\n':
+        if out == "N":
             print "LIGHTS ON"
             Interp("lights on")
 
-        elif out == "OFF\r\n":
+        elif out == "F":
             print "LIGHTS OFF"
             Interp("lights off")
 
-        elif out == "A\r\n":
+        elif out == "A":
             print "TOGGLE"
             Interp("lights")
         else:
-            print repr(out) 
+            print "Unrecognized command" 
 
