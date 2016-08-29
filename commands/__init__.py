@@ -1,1 +1,1 @@
-__all__ = ['command', 'lights', 'volume', 'screen', 'music']
+__all__ = ['command', 'screen', 'volume', 'lights', 'music']
