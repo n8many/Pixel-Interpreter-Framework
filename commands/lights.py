@@ -84,7 +84,7 @@ class Lights(Command):
 
             elif commandlist[i] == "brightness" and self.isNumber(commandlist[i+1]):
                 data['bri'] = int(commandlist[i+1]) * 25 + 5            
-                print "brightness level" + commandlist[i+1] 
+                print "brightness level " + commandlist[i+1] 
 
             elif commandlist[i] == 'soft':
                 data['sat'] = 100
