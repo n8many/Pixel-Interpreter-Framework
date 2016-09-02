@@ -19,15 +19,22 @@ class Lights(Command):
         print setting
         for light in group:
             resource = {'which':light,'data':{'state':setting}}
-            self.bridge.light.update(resource)
+            try: 
+                self.bridge.light.update(resource)
+            except:
+                print "Cannot connect to bridge"
 
     def getStatus(self):
         self.isOn = False
         for light in self.currentGroup:
             resource = {'which':light}
-            self.status[light] = self.bridge.light.get({'which':light})['resource']
-            if self.status[light]['state']['on']:
-                self.isOn = True
+            try:    
+                self.status[light] = self.bridge.light.get({'which':light})['resource']
+                if self.status[light]['state']['on']:
+                    self.isOn = True
+            except:
+                print "Cannot Connect to light " + str(light)
+
 
     def run(self, commandlist):
         self.getStatus()
