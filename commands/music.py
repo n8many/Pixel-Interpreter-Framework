@@ -14,7 +14,6 @@ class Music(Command):
         self.port = credentials['port']
         self.client = mpd.MPDClient()
         self.connected = True
-        self.restart()
         self.minimumaccuracy = 75
         self.defaultPlaylist = credentials['playlist']
 

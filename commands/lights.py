@@ -5,15 +5,16 @@ class Lights(Command):
     def __init__(self, credentials):
         print 'Loading lights module'
         self.keywords = ['light', 'lights']
-        self.bridge = Bridge(device={'ip':credentials['ip']},
-                user={'name':credentials['u']})
+        self.ip = credentials['ip']
+        self.u = credentials['u']
+        self.bridge = False
         self.groups = credentials['groups']
         self.defaults = credentials['default']
         self.currentGroup = self.groups[self.defaults['group']] 
         self.colors = credentials['color']
         self.isOn = False
         self.status = dict()
-        self.getStatus()
+        #self.getStatus()
 
     def sendCommand(self, group, setting):
         print setting
@@ -24,7 +25,9 @@ class Lights(Command):
             except:
                 print "Cannot connect to bridge"
 
-    def getStatus(self):
+    def getStatus(self):        
+        self.bridge = Bridge(device={'ip':self.ip},
+                user={'name':self.u})
         self.isOn = False
         for light in self.currentGroup:
             resource = {'which':light}
